@@ -99,7 +99,7 @@
     },
     computed: {
       inputWidth(): string {
-        return `${this.input.length + 1}ch`
+        return `min(${this.input.length + 1}ch, 100%)`
       }
     },
     watch: {
@@ -236,6 +236,8 @@
     top: 50px;
     width: calc(100% - 30px);
     border-top: none !important;
+    max-height: 360px;
+    overflow-y: auto;
   }
 
   div.lookup-result {
@@ -245,6 +247,7 @@
 
   span.lookup-result {
     cursor: default;
+    word-break: break-word;
   }
 
   div.insert-container {
@@ -253,20 +256,28 @@
   }
 
   span.insert-word {
+    float: left;
     margin-top: 2px;
     margin-bottom: 2px;
     margin-right: 10px;
-    float: left;
+    word-break: break-word;
+
+    & > div > span {
+      text-align: left !important;
+    }
   }
 
-  input.insert, input.insert:focus {
+  input.insert {
+    position: relative;
+    float: left;
+    height: 32px;
     margin-top: 2px;
     margin-bottom: 2px;
-    height: 32px;
-    float: left;
-    border: 0 none !important;
-    outline: none !important;
     padding: 0 !important;
-    position: relative;
+    border: 0 none !important;
+
+    &:focus {
+      outline: none !important;
+    }
   }
 </style>
