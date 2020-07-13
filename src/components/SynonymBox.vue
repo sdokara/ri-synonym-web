@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="row justify-content-md-center">
-      <div class="col-md-6 input-group">
+      <div class="col-md-7 input-group">
         <div class="input-group-prepend">
           <button class="btn btn-primary" type="button"
                   @click="toggleMode"

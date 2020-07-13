@@ -1,5 +1,5 @@
 <template>
-  <div class="home-root">
+  <div class="root">
     <synonym-box/>
   </div>
 </template>
@@ -15,8 +15,8 @@
   }
 </script>
 
-<style scoped lang="scss">
-  div.home-root {
+<style lang="scss">
+  div.root {
     margin-top: 30px;
   }
 </style>

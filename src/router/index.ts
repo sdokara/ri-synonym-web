@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter, { RouteConfig } from 'vue-router'
-import Home from '../views/Home.vue'
+import Home from '@/views/Home.vue'
+import NotFound from '@/views/NotFound.vue'
 
 Vue.use(VueRouter)
 
@@ -11,6 +12,14 @@ const routes: Array<RouteConfig> = [
     component: Home,
     meta: {
       title: 'Synonyms Web'
+    }
+  },
+  {
+    path: '*',
+    name: '404',
+    component: NotFound,
+    meta: {
+      title: 'Ooops...'
     }
   }
 ]
