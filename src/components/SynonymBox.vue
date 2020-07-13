@@ -3,7 +3,7 @@
     <div class="row justify-content-md-center">
       <div class="col-md-6 input-group">
         <div class="input-group-prepend">
-          <button class="btn btn-outline-primary" type="button"
+          <button class="btn btn-primary" type="button"
                   @click="toggleMode"
                   :title="mode === 'lookup' ? 'Switch to Insert Mode' : 'Switch to Lookup Mode'">
             <b-icon :icon="mode === 'lookup' ? 'search' : 'plus-circle'"/>
@@ -11,8 +11,9 @@
         </div>
         <template v-if="mode === 'lookup'">
           <input ref="inLookup" type="text" class="form-control lookup shadow-none"
-                 v-model="input">
-          <div class="lookup-dropdown border border-primary rounded fade"
+                 v-model="input"
+                 @keydown="lookupKeyDown">
+          <div class="lookup-dropdown border border-primary rounded-left fade"
                :class="{'show': input.length > 0 && results.length > 0}">
             <div v-for="word in results" v-bind:key="word" class="lookup-result">
               <span class="lookup-result">{{ word }}</span>
@@ -45,9 +46,9 @@
                    @blur="duplicate = null">
           </div>
           <div class="input-group-append">
-            <button class="btn btn-outline-success" type="button" title="Insert synonyms"
+            <button class="btn btn-success" type="button" title="Insert synonyms"
                     @click="insertInsert"
-                    :disabled="words.length < 2">
+                    :disabled="words.length < 2 || input.length > 0">
               <b-icon icon="check-circle"/>
             </button>
           </div>
@@ -56,7 +57,7 @@
              :class="[alert && `alert-${alert.type}`, {'show': alert !== null}]"
              style="width: 100%"
              role="alert">
-          {{ alert && alert.message }}
+          <span v-html="alert && alert.message"/>
           <button type="button" class="close" aria-label="Close" @click="alert = null">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -74,10 +75,10 @@
 
   const focus = (element: Element) => (element as HTMLElement).focus()
   const LOOKUP_TIMEOUT = 200
-  const ALERT_TIMEOUT = 2000
+  const ALERT_TIMEOUT = 3000
 
   interface Alert {
-    type: 'success' | 'danger';
+    type: 'success' | 'danger' | 'info';
     message: string;
   }
 
@@ -85,7 +86,7 @@
     name: 'SynonymBox',
     data() {
       return {
-        mode: 'lookup',
+        mode: 'lookup' as 'lookup' | 'insert',
         input: '',
 
         results: [] as string[],
@@ -94,7 +95,9 @@
         inFocused: false,
         duplicate: null as string | null,
 
-        alert: null as Alert | null
+        alert: null as Alert | null,
+        alertInterval: -1,
+        dispatchedAlerts: [] as Alert[]
       }
     },
     computed: {
@@ -112,10 +115,13 @@
     },
     created() {
       this.apiLookup = _.debounce(this.apiLookup, LOOKUP_TIMEOUT)
-      this.dispatchAlert = _.throttle(this.dispatchAlert, ALERT_TIMEOUT)
     },
     mounted() {
       focus(this.$refs.inLookup)
+      this.dispatchAlertOnce({
+        type: 'info',
+        message: 'Hint: Press <b>Ctrl+Enter</b> or click <b>&#128269;</b> to switch to <b>Insert Mode</b>'
+      })
     },
     methods: {
       toggleMode() {
@@ -126,10 +132,20 @@
             this.lookupLookup(this.input)
           } else {
             focus(this.$refs.inInsert)
+            this.dispatchAlertOnce({
+              type: 'info',
+              message: 'Hint: Press <b>Ctrl+Enter</b> or click <b>+</b> to switch back to <b>Lookup Mode</b>'
+            })
           }
         })
       },
 
+      lookupKeyDown(e: KeyboardEvent) {
+        if (e.key === 'Enter' && e.ctrlKey) {
+          e.preventDefault()
+          this.toggleMode()
+        }
+      },
       async lookupLookup(word: string) {
         if (word.length === 0) {
           this.results = []
@@ -158,10 +174,17 @@
               if (this.words.includes(word)) {
                 if (words.length === 1) {
                   this.duplicate = word
+                  this.dispatchAlert({ type: 'danger', message: 'A word cannot be a synonym of itself' })
                 }
                 return
               }
               this.words.push(word)
+              if (this.words.length === 2) {
+                this.dispatchAlertOnce({
+                  type: 'info',
+                  message: 'Hint: Enter more words or press <b>Enter</b> or click <b>&#10003;</b> to insert synonyms'
+                })
+              }
             }
             this.input = ''
             break
@@ -176,7 +199,9 @@
           }
           case 'Enter': {
             e.preventDefault()
-            if (this.input.length === 0 && this.words.length > 1) {
+            if (e.ctrlKey) {
+              this.toggleMode()
+            } else if (this.input.length === 0 && this.words.length > 1) {
               this.insertInsert()
             }
             break
@@ -207,9 +232,17 @@
 
       dispatchAlert(alert: Alert) {
         this.alert = alert
-        setTimeout(() => {
+        clearInterval(this.alertInterval)
+        this.alertInterval = setTimeout(() => {
           this.alert = null
         }, ALERT_TIMEOUT)
+      },
+      dispatchAlertOnce(alert: Alert) {
+        if (_.some(this.dispatchedAlerts, dispatched => _.isEqual(dispatched, alert))) {
+          return
+        }
+        this.dispatchAlert(alert)
+        this.dispatchedAlerts.push(alert)
       },
       dispatchError(err: AxiosError) {
         this.dispatchAlert({ type: 'danger', message: err.response?.data.message || err.message })
