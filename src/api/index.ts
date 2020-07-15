@@ -7,11 +7,8 @@ function request(method: Method, path: string, params: any = null, data: any = n
 }
 
 export default {
-  addTwoSynonyms(word1: string, word2: string): AxiosPromise {
-    return request('post', '/synonyms', { word1, word2 })
-  },
   addSynonyms(words: string[]): AxiosPromise {
-    return request('post', '/synonyms', { words })
+    return request('post', '/synonyms', null, words)
   },
   getSynonyms(word: string): AxiosPromise {
     return request('get', '/synonyms', { word })
