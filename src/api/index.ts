@@ -12,5 +12,8 @@ export default {
   },
   getSynonyms(word: string): AxiosPromise {
     return request('get', '/synonyms', { word })
+  },
+  clearSynonyms(): AxiosPromise {
+    return request('delete', '/synonyms')
   }
 }

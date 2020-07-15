@@ -144,6 +144,9 @@
         if (e.key === 'Enter' && e.ctrlKey) {
           e.preventDefault()
           this.toggleMode()
+        } else if (e.key === 'Delete' && e.ctrlKey) {
+          e.preventDefault()
+          this.clearSynonyms()
         }
       },
       async lookupLookup(word: string) {
@@ -206,6 +209,13 @@
             }
             break
           }
+          case 'Delete': {
+            if (e.ctrlKey) {
+              e.preventDefault()
+              this.clearSynonyms()
+            }
+            break
+          }
           default: {
             this.duplicate = null
             break
@@ -225,6 +235,15 @@
           this.words = []
           focus(this.$refs.inInsert)
           this.dispatchAlert({ type: 'success', message: 'Synonyms saved' })
+        } catch (err) {
+          this.dispatchError(err)
+        }
+      },
+
+      async clearSynonyms() {
+        try {
+          await api.clearSynonyms()
+          this.dispatchAlert({ type: 'success', message: 'Synonyms cleared' })
         } catch (err) {
           this.dispatchError(err)
         }
