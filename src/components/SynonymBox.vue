@@ -166,7 +166,7 @@
         switch (e.key) {
           case ' ': {
             e.preventDefault()
-            const words = this.input.split(' ')
+            const words = this.input.split(' ').map(word => word.toLowerCase())
             for (const word of words) {
               if (word.length === 0) {
                 continue
