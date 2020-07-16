@@ -154,6 +154,7 @@
         }
       },
       async lookupLookup(word: string) {
+        word = word.trim()
         if (word.length === 0) {
           this.results = []
           this.alert = null
