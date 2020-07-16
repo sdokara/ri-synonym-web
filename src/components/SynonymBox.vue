@@ -53,7 +53,7 @@
             </button>
           </div>
         </template>
-        <div class="alert alert-dismissible fade in"
+        <div class="alert alert-dismissible fade in text-left"
              :class="[alert && `alert-${alert.type}`, {'show': alert !== null}]"
              style="width: 100%"
              role="alert">
@@ -118,9 +118,11 @@
     },
     mounted() {
       focus(this.$refs.inLookup)
-      this.dispatchAlertOnce({
+      this.dispatchHint({
         type: 'info',
-        message: 'Hint: Press <b>Ctrl+Enter</b> or click <b>&#128269;</b> to switch to <b>Insert Mode</b>'
+        message: 'You are in <b>Lookup Mode</b><br/>' +
+          'Start typing to lookup synonyms, or<br/>' +
+          'Press <b>Ctrl+Enter</b> or click <b>&#128269;</b> to switch to <b>Insert Mode</b>'
       })
     },
     methods: {
@@ -132,9 +134,11 @@
             this.lookupLookup(this.input)
           } else {
             focus(this.$refs.inInsert)
-            this.dispatchAlertOnce({
+            this.dispatchHint({
               type: 'info',
-              message: 'Hint: Press <b>Ctrl+Enter</b> or click <b>+</b> to switch back to <b>Lookup Mode</b>'
+              message: 'You are in <b>Insert Mode</b><br/>' +
+                'Type <b>word [space] word [space]</b> to insert a synonym pair, or<br/>' +
+                'Press <b>Ctrl+Enter</b> or click <b>+</b> to switch back to <b>Lookup Mode</b>'
             })
           }
         })
@@ -152,6 +156,7 @@
       async lookupLookup(word: string) {
         if (word.length === 0) {
           this.results = []
+          this.alert = null
           return
         }
         await this.apiLookup(word)
@@ -160,6 +165,7 @@
         try {
           const res = await api.getSynonyms(word)
           this.results = res.data.length > 0 ? res.data : ['No synonyms found']
+          this.alert = null
         } catch (err) {
           this.dispatchError(err)
         }
@@ -183,9 +189,10 @@
               }
               this.words.push(word)
               if (this.words.length === 2) {
-                this.dispatchAlertOnce({
+                this.dispatchHint({
                   type: 'info',
-                  message: 'Hint: Enter more words or press <b>Enter</b> or click <b>&#10003;</b> to insert synonyms'
+                  message: 'Type more words to add, or<br/>' +
+                    'Press <b>Enter</b> or click <b>&#10003;</b> to insert the synonyms'
                 })
               }
             }
@@ -249,18 +256,20 @@
         }
       },
 
-      dispatchAlert(alert: Alert) {
+      dispatchAlert(alert: Alert, persistent = false) {
         this.alert = alert
         clearInterval(this.alertInterval)
-        this.alertInterval = setTimeout(() => {
-          this.alert = null
-        }, ALERT_TIMEOUT)
+        if (!persistent) {
+          this.alertInterval = setTimeout(() => {
+            this.alert = null
+          }, ALERT_TIMEOUT)
+        }
       },
-      dispatchAlertOnce(alert: Alert) {
+      dispatchHint(alert: Alert) {
         if (_.some(this.dispatchedAlerts, dispatched => _.isEqual(dispatched, alert))) {
           return
         }
-        this.dispatchAlert(alert)
+        this.dispatchAlert(alert, true)
         this.dispatchedAlerts.push(alert)
       },
       dispatchError(err: AxiosError) {
