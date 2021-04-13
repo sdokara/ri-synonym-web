@@ -114,7 +114,7 @@
       }
     },
     created() {
-      this.apiLookup = _.debounce(this.apiLookup, LOOKUP_TIMEOUT)
+      this.apiLookup = _.debounce(this.apiLookup, LOOKUP_TIMEOUT) as (word: string) => Promise<void>
     },
     mounted() {
       focus(this.$refs.inLookup)
